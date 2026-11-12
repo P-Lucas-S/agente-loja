@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atendente virtual · Mercadinho Exemplo</title>
+<style>
+:root{--bg:#f5f6f4;--panel:#fff;--line:#dfe3dc;--text:#1c211b;--muted:#5d665a;--brand:#1f7a4d;--brand-ink:#fff;--me:#e7f3ec;--bot:#fff;--tool:#f3f0e6;--accent:#b7791f}
+@media (prefers-color-scheme:dark){:root{--bg:#141714;--panel:#1c201c;--line:#30372f;--text:#e7ece5;--muted:#9aa597;--brand:#3fae74;--brand-ink:#0d1a12;--me:#203527;--bot:#1c201c;--tool:#2a2719;--accent:#e0a84a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800}
+header h1{font-size:17px;margin:0}
+header p{margin:0;color:var(--muted);font-size:13px}
+.badge{margin-left:auto;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted)}
+main{display:grid;grid-template-columns:1fr 360px;gap:16px;max-width:1120px;margin:0 auto;padding:16px;height:calc(100vh - 69px)}
+@media (max-width:860px){main{grid-template-columns:1fr;height:auto}.lado{min-height:300px}}
+.chat{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;min-height:480px;overflow:hidden}
+#msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:80%;padding:10px 14px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
+.m.eu{align-self:flex-end;background:var(--me);border-bottom-right-radius:4px}
+.m.bot{align-self:flex-start;background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:4px}
+.m.aviso{align-self:center;font-size:13px;color:var(--muted);border:1px dashed var(--line);background:none}
+.ferr{align-self:flex-start;font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.ferr span{background:var(--tool);border-radius:999px;padding:2px 9px}
+.sug{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 10px}
+.sug button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:6px 12px;cursor:pointer}
+form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+input{flex:1;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+button.env{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.lado{background:var(--panel);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.abas{display:flex;border-bottom:1px solid var(--line)}
+.abas button{flex:1;font:inherit;font-weight:600;padding:10px;border:0;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.abas button[aria-selected=true]{color:var(--text);border-bottom-color:var(--brand)}
+.conteudo{flex:1;overflow:auto;padding:12px;font-size:13px}
+.passo{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;overflow-wrap:anywhere}
+.passo b{color:var(--accent);font-family:ui-monospace,Menlo,Consolas,monospace}
+pre{margin:6px 0 0;white-space:pre-wrap;word-break:break-word;font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace;max-height:180px;overflow:auto}
+.vazio{color:var(--muted);text-align:center;padding:24px 8px}
+.ch{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.ch strong{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-hidden="true">M</div>
+  <div><h1>Mercadinho Exemplo · atendente virtual</h1><p>Agente de IA com ferramentas: consulta produtos e pedidos, abre chamados e passa para um humano.</p></div>
+  <span class="badge" id="modo">loja fictícia · demonstração</span>
+</header>
+<main>
+  <section class="chat" aria-label="Conversa">
+    <div id="msgs" aria-live="polite"></div>
+    <div class="sug" id="sug"></div>
+    <form id="f"><input id="txt" autocomplete="off" maxlength="600" placeholder="Escreva sua mensagem…" aria-label="Mensagem"><button class="env" id="env">Enviar</button></form>
+  </section>
+  <aside class="lado">
+    <div class="abas" role="tablist">
+      <button role="tab" aria-selected="true" id="tab-b">Bastidores</button>
+      <button role="tab" aria-selected="false" id="tab-c">Chamados abertos</button>
+    </div>
+    <div class="conteudo" id="painel"></div>
+  </aside>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let sessao = null, aba = 'b';
+const historicoPassos = [];
+const SUG = ['Vocês têm arroz integral?', 'Qual o status do pedido 1042?', 'Chegou leite vencido no meu pedido 1035', 'Até que horas vocês entregam?', 'Quero falar com uma pessoa'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+const NOMES = {buscar_produtos:'buscou produtos', consultar_pedido:'consultou pedido', abrir_chamado:'abriu chamado', transferir_para_humano:'transferiu para humano'};
+
+function add(cls, html){ const d = document.createElement('div'); d.className = 'm ' + cls; d.innerHTML = html; $('msgs').appendChild(d); $('msgs').scrollTop = 1e9; return d; }
+function sugestoes(){ $('sug').innerHTML = ''; SUG.forEach(s => { const b = document.createElement('button'); b.type = 'button'; b.textContent = s; b.onclick = () => enviar(s); $('sug').appendChild(b); }); }
+
+async function enviar(texto){
+  texto = texto.trim(); if(!texto) return;
+  add('eu', esc(texto)); $('txt').value = ''; $('sug').hidden = true; $('env').disabled = true;
+  const pensando = add('bot', '…');
+  try{
+    const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sessao, mensagem: texto})});
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || 'erro');
+    sessao = j.sessao;
+    if(j.passos.length){
+      const f = document.createElement('div'); f.className = 'ferr';
+      f.innerHTML = j.passos.map(p => `<span>⚙ ${NOMES[p.ferramenta] || p.ferramenta}</span>`).join('');
+      $('msgs').insertBefore(f, pensando);
+      historicoPassos.unshift({pergunta: texto, passos: j.passos});
+    }
+    pensando.innerHTML = fmt(j.resposta || '(sem resposta)');
+    if(j.transferida && !document.querySelector('.m.aviso')) add('aviso', 'Conversa encaminhada para atendimento humano (nesta demonstração, ninguém vai responder).');
+  }catch(e){ pensando.className = 'm aviso'; pensando.textContent = e.message; }
+  $('env').disabled = false; $('txt').focus(); render();
+}
+
+async function render(){
+  $('tab-b').setAttribute('aria-selected', aba === 'b'); $('tab-c').setAttribute('aria-selected', aba === 'c');
+  if(aba === 'b'){
+    $('painel').innerHTML = historicoPassos.length ? historicoPassos.map(h =>
+      `<p><em>“${esc(h.pergunta)}”</em></p>` + h.passos.map(p => `<div class="passo"><b>${esc(p.ferramenta)}</b>(${esc(JSON.stringify(p.argumentos))})<pre>${esc(JSON.stringify(p.resultado, null, 1))}</pre></div>`).join('')).join('')
+      : '<div class="vazio">Aqui aparecem as ferramentas que o agente decidiu usar em cada resposta, com os argumentos e o que cada uma devolveu.</div>';
+  } else {
+    const l = await (await fetch('/api/chamados')).json();
+    $('painel').innerHTML = l.length ? l.map(c => `<div class="ch"><strong>${esc(c.numero)} · ${esc(c.tipo)}</strong>${esc(c.descricao)}<div style="color:var(--muted)">${esc(c.criado_em)}${c.pedido ? ' · pedido ' + esc(c.pedido) : ''}</div></div>`).join('')
+      : '<div class="vazio">Nenhum chamado ainda. Peça uma troca ou faça uma reclamação no chat.</div>';
+  }
+}
+
+$('f').onsubmit = e => { e.preventDefault(); enviar($('txt').value); };
+$('tab-b').onclick = () => { aba = 'b'; render(); };
+$('tab-c').onclick = () => { aba = 'c'; render(); };
+fetch('/api/health').then(r => r.json()).then(j => { if(j.modo === 'simulado') $('modo').textContent = 'modo simulado · sem chave de IA'; else $('modo').textContent = 'loja fictícia · Gemini'; });
+add('bot', 'Oi! Sou a atendente virtual do Mercadinho Exemplo. Posso consultar preços e estoque, ver a situação do seu pedido, registrar trocas e reclamações ou chamar uma pessoa.');
+sugestoes(); render();
+</script>
+</body>
+</html>
