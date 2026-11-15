@@ -2,7 +2,7 @@
 
 Atendente virtual para uma loja de bairro fictícia, feita com **Gemini** e **chamada de ferramentas**. O modelo entende o pedido do cliente, decide qual ferramenta usar e responde com base no que ela devolveu, sem inventar preço, estoque ou situação de pedido.
 
-**Demo:** [PREENCHER: link do Render]
+**Demo:** https://agente-mercadinho.onrender.com — plano gratuito: a primeira visita depois de um tempo parado pode levar uns 50 s para acordar o servidor.
 
 ![Tela do agente](docs/agente.png)
 
@@ -28,7 +28,7 @@ O painel **Bastidores** mostra cada ferramenta chamada, com os argumentos e o re
 Decisões:
 - **Dados só pelas ferramentas.** As instruções obrigam o modelo a consultar antes de responder sobre preço, estoque ou pedido.
 - **Falha não derruba a conversa.** Erro numa ferramenta vira resultado de erro para o modelo; erro do provedor vira aviso na tela.
-- **Limites para o plano gratuito.** 25 mensagens por conversa, 300 por dia e histórico curto.
+- **Limites para o plano gratuito.** Usa o Gemini 3.5 Flash Lite (a cota gratuita dele é a maior), 25 mensagens por conversa, 120 por dia, histórico curto e 25 s de tempo máximo por chamada ao modelo.
 - **Modo simulado.** Sem `GEMINI_API_KEY`, regras simples imitam o modelo, e a página e os testes funcionam sem chave.
 
 ## Rodar localmente
