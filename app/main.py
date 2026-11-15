@@ -56,6 +56,7 @@ def chat(e: Entrada):
     try:
         resposta, passos = modelo.responder(s, e.mensagem.strip())
     except Exception as err:  # erro do provedor (cota, rede): a página segue funcionando
+        print(f"erro do modelo: {err!r}"[:600], flush=True)  # aparece nos logs do Render
         raise HTTPException(503, f"O modelo não respondeu agora ({type(err).__name__}). Tente de novo em instantes.")
     return {"sessao": s.id, "resposta": resposta, "passos": passos, "transferida": s.transferida}
 
