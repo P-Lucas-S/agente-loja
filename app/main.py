@@ -8,6 +8,7 @@ from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -15,6 +16,9 @@ from pydantic import BaseModel, Field
 from .agent import CHAMADOS, Sessao, Simulado, criar_modelo
 
 app = FastAPI(title="Agente de atendimento — Mercadinho Exemplo")
+# O portfólio (GitHub Pages) conversa com o agente direto do navegador.
+app.add_middleware(CORSMiddleware, allow_origins=["https://p-lucas-s.github.io"],
+                   allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 STATIC = Path(__file__).parent / "static"
 modelo = criar_modelo()
 

@@ -76,3 +76,13 @@ def test_laco_gemini_executa_ferramenta_e_responde():
     # a 2ª chamada levou a resposta da ferramenta com papel 'user'
     assert vistos[1][-1].role == "user" and vistos[1][-1].parts[0].function_response.name == "consultar_pedido"
     assert len(s.historico) == 4
+
+
+def test_cors_libera_so_o_portfolio():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    c = TestClient(app)
+    ok = c.options("/api/chat", headers={"Origin": "https://p-lucas-s.github.io", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
+    assert ok.headers.get("access-control-allow-origin") == "https://p-lucas-s.github.io"
+    outro = c.get("/api/health", headers={"Origin": "https://exemplo.com"})
+    assert "access-control-allow-origin" not in outro.headers
